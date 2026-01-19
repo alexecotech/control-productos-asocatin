@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASOCATIN - Control de Productos</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e8ba3 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 750px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 { font-size: 22px; margin-bottom: 3px; }
+        .header p { margin: 2px 0; font-size: 13px; }
+        .header .subtitle { font-size: 15px; font-weight: 600; }
+
+        .content { padding: 25px; }
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* LOGIN */
+        .welcome { text-align: center; padding: 20px; }
+        .welcome h2 { color: #333; margin-bottom: 15px; font-size: 20px; }
+
+        /* FORMULARIOS */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; color: #333; font-weight: 600; margin-bottom: 5px; font-size: 13px; }
+        .form-group input, .form-group select { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #2a5298; box-shadow: 0 0 0 2px rgba(42, 82, 152, 0.1); }
+
+        /* BOTONES */
+        .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 8px; transition: all 0.2s; }
+        .btn-primary { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(42, 82, 152, 0.3); }
+        .btn-secondary { background: #e9ecef; color: #495057; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-success:hover { background: #059669; }
+        .btn-small { width: auto; padding: 6px 12px; font-size: 12px; display: inline-block; margin-right: 5px; }
+
+        /* DASHBOARD */
+        .user-info { background: #f8f9fa; padding: 12px 15px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #e9ecef; overflow-x: auto; }
+        .tab { padding: 8px 15px; background: none; border: none; border-bottom: 3px solid transparent; cursor: pointer; font-size: 13px; font-weight: 600; color: #6c757d; white-space: nowrap; }
+        .tab.active { color: #2a5298; border-bottom-color: #2a5298; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-content h3 { font-size: 16px; margin-bottom: 15px; color: #333; }
+
+        /* ÁREAS */
+        .areas-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 15px; }
+        .area-card { background: #f8f9fa; padding: 12px; border-radius: 8px; text-align: center; font-size: 13px; }
+        .area-card h4 { font-size: 14px; margin-bottom: 3px; }
+
+        /* BÚSQUEDA */
+        .search-results { max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px; margin-top: 8px; display: none; background: white; }
+        .search-results.active { display: block; }
+        .product-item { padding: 10px; border-bottom: 1px solid #e9ecef; cursor: pointer; font-size: 12px; }
+        .product-item:hover { background: #f8f9fa; }
+        .product-item:last-child { border-bottom: none; }
+
+        /* LISTA PRODUCTOS */
+        .productos-agregados-container { background: #f8f9fa; padding: 12px; border-radius: 8px; margin: 15px 0; }
+        .producto-agregado-item { background: white; padding: 10px; margin-bottom: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+        .producto-agregado-item:last-child { margin-bottom: 0; }
+
+        /* ALERTAS */
+        .alert { padding: 10px 12px; border-radius: 6px; margin-bottom: 15px; display: none; font-size: 13px; }
+        .alert.active { display: block; }
+        .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+        .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+
+        /* MODAL */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+        .modal-content { background-color: white; margin: auto; padding: 25px; border-radius: 12px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        .modal-header { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e9ecef; }
+        .modal-header h2 { font-size: 18px; color: #333; }
+        .close-modal { float: right; font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer; }
+        .close-modal:hover { color: #000; }
+
+        /* RADIO BUTTONS */
+        .radio-group { margin: 20px 0; }
+        .radio-option { display: flex; align-items: center; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; }
+        .radio-option:hover { border-color: #2a5298; background: #f8f9fa; }
+        .radio-option input[type="radio"] { margin-right: 10px; width: 20px; height: 20px; }
+        .radio-option.selected { border-color: #2a5298; background: #e3f2fd; }
+
+        /* CHECKBOX LIST */
+        .checkbox-list { max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; }
+        .checkbox-item { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; padding: 8px; border-bottom: 1px solid #f0f0f0; align-items: center; }
+        .checkbox-item:last-child { border-bottom: none; }
+        .checkbox-item label { font-size: 13px; cursor: pointer; }
+        .checkbox-item input[type="checkbox"] { width: 18px; height: 18px; }
+        .checkbox-item input[type="number"] { width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; }
+
+        /* PERSONAS LIST */
+        .persona-item { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .persona-item h4 { font-size: 14px; margin-bottom: 10px; color: #333; }
+        .btn-add { background: #3498db; color: white; padding: 8px 16px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; margin-top: 10px; }
+        .btn-add:hover { background: #2980b9; }
+        .btn-remove { background: #e74c3c; color: white; padding: 4px 10px; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; }
+
+        /* RESUMEN */
+        .resumen-box { background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2a5298; }
+        .resumen-box h4 { font-size: 14px; color: #1e3c72; margin-bottom: 10px; }
+        .resumen-item { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; }
+        .resumen-total { font-weight: bold; font-size: 16px; color: #1e3c72; border-top: 2px solid #2a5298; padding-top: 10px; margin-top: 10px; }
+
+        /* TABLAS */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 12px; }
+        table th, table td { padding: 8px; text-align: left; border: 1px solid #dee2e6; }
+        table th { background: #2a5298; color: white; font-weight: 600; }
+        table tbody tr:hover { background: #f8f9fa; }
+        .total-col { background: #e3f2fd; font-weight: 600; color: #1e3c72; }
+        .empty-report { text-align: center; padding: 30px; color: #6c757d; font-size: 13px; }
+
+        /* SEPARATOR */
+        .separator { margin: 20px 0; border: 0; border-top: 1px solid #e9ecef; }
+
+        .hidden { display: none !important; }
+
+        @media print {
+            body { background: white; }
+            .header, .user-info, .tabs, .btn, .alert { display: none !important; }
+            .container { box-shadow: none; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ASOCATIN</h1>
+            <p class="subtitle">AIO Catering System</p>
+            <p style="font-style: italic; opacity: 0.85;">by A&B EcoTech</p>
+        </div>
+
+        <div class="content">
+            <!-- BIENVENIDA -->
+            <div id="welcomeScreen" class="screen active">
+                <div class="welcome">
+                    <h2>¡Bienvenido!</h2>
+                    <p style="color: #6c757d; margin-bottom: 25px;">Control de Productos</p>
+                    <button class="btn btn-primary" onclick="showLogin()">Ingresar al Sistema</button>
+                </div>
+            </div>
+
+            <!-- LOGIN -->
+            <div id="loginScreen" class="screen">
+                <h2 style="text-align: center; margin-bottom: 20px; font-size: 18px;">Iniciar Sesión</h2>
+                <div id="loginAlert" class="alert"></div>
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>Usuario</label>
+                        <input type="text" id="loginUsuario" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Ingresar</button>
+                    <button type="button" class="btn btn-secondary" onclick="showWelcome()">Volver</button>
+                </form>
+            </div>
+
+            <!-- DASHBOARD -->
+            <div id="dashboardScreen" class="screen">
+                <div class="user-info">
+                    <div>
+                        <strong id="userDisplay" style="font-size: 13px;"></strong>
+                        <br>
+                        <small id="rolDisplay" style="font-size: 12px; color: #6c757d;"></small>
+                    </div>
+                    <button class="btn btn-secondary btn-small" onclick="logout()">Cerrar Sesión</button>
+                </div>
+
+                <div id="dashboardAlert" class="alert"></div>
+
+                <div id="dashboardTabs"></div>
+                <div id="dashboardContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EXTRAS -->
+    <div id="extrasModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close-modal" onclick="closeExtrasModal()">&times;</span>
+                <h2>Información de Facturación - EXTRAS</h2>
+            </div>
+            <div id="extrasModalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzD177GZk16jqq4XNrGqOqsf1kwZt-VOzSQOv-iNEFuVRTqC-8WWK8NZ0OnQSoXxvZ2Aw/exec';
+        
+        let currentUser = null;
+        let areasData = [];
+        let productosLista = [];
+        let extrasProductos = [];
+
+        // BEBIDAS Y CAFETERÍA (de la imagen)
+        const BEBIDAS_CAFETERIA = [
+            {nombre: 'Agua sin gas 1 lt', precio: 0.67},
+            {nombre: 'Agua sin gas 330 ml', precio: 0.00},
+            {nombre: 'Agua sin gas 625 ml', precio: 0.49},
+            {nombre: 'Botellas de agua 20 lt', precio: 1.75},
+            {nombre: 'Bebida hidratante 500 ml', precio: 0.60},
+            {nombre: 'Gaseosa 3 lt', precio: 3.37},
+            {nombre: 'Gaseosa 400 ml', precio: 0.77},
+            {nombre: 'Gaseosa 500 ml', precio: 0.77},
+            {nombre: 'Agua aromática x25', precio: 0.72},
+            {nombre: 'Azúcar granulada', precio: 1.11},
+            {nombre: 'Café molido 500 gr', precio: 10.09},
+            {nombre: 'Café pasado 400 gr', precio: 3.91},
+            {nombre: 'Crema de leche sin polvo', precio: 7.61},
+            {nombre: 'Leche entera', precio: 5.82},
+            {nombre: 'Cuchara pequeña x 50', precio: 0.93},
+            {nombre: 'Vaso térmico 8 oz x 24', precio: 1.11},
+            {nombre: 'Tapa plástica 8 oz', precio: 1.90},
+            {nombre: 'Servilletas x 100', precio: 0.95}
+        ];
+
+        // SERVICIOS ALIMENTACIÓN
+        const SERVICIOS_ALIMENTACION = ['Desayuno', 'Almuerzo', 'Merienda', 'Cena', 'Refrigerio'];
+
+        // ============================================
+        // NAVEGACIÓN
+        // ============================================
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function showWelcome() { showScreen('welcomeScreen'); }
+        function showLogin() { showScreen('loginScreen'); }
+
+        // ============================================
+        // LOGIN
+        // ============================================
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const usuario = document.getElementById('loginUsuario').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: new URLSearchParams({ action: 'login', usuario, password })
+                });
+                const data = await response.json();
+
+                if(data.success) {
+                    currentUser = data.user;
+                    document.getElementById('userDisplay').textContent = 'Usuario: ' + currentUser.usuario;
+                    document.getElementById('rolDisplay').textContent = 'Rol: ' + currentUser.rol;
+                    showScreen('dashboardScreen');
+                    loadDashboard();
+                } else {
+                    showAlert('loginAlert', data.message, 'error');
+                }
+            } catch(error) {
+                showAlert('loginAlert', 'Error de conexión', 'error');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            productosLista = [];
+            document.getElementById('loginUsuario').value = '';
+            document.getElementById('loginPassword').value = '';
+            showWelcome();
+        }
+
+        // ============================================
+        // DASHBOARD
+        // ============================================
+
+        function loadDashboard() {
+            const tabsHtml = `
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab(0)">Gestionar Áreas</button>
+                    <button class="tab" onclick="switchTab(1)">Ingresar Productos</button>
+                    <button class="tab" onclick="switchTab(2)">Registrar EXTRAS</button>
+                    <button class="tab" onclick="switchTab(3)">Reporte Diario</button>
+                    <button class="tab" onclick="switchTab(4)">Reporte EXTRAS</button>
+                </div>
+            `;
+            document.getElementById('dashboardTabs').innerHTML = tabsHtml;
+            switchTab(0);
+        }
+
+        function switchTab(index) {
+            document.querySelectorAll('.tab').forEach((t, i) => {
+                t.classList.toggle('active', i === index);
+            });
+
+            const content = document.getElementById('dashboardContent');
+            
+            if(index === 0) {
+                content.innerHTML = getAreasTab();
+                cargarAreas();
+            } else if(index === 1) {
+                content.innerHTML = getProductosTab();
+                cargarAreasSelect();
+                setupSearch();
+            } else if(index === 2) {
+                content.innerHTML = getExtrasTab();
+                cargarAreasSelectExtras();
+                setupSearchExtras();
+            } else if(index === 3) {
+                content.innerHTML = getReporteDiarioTab();
+            } else if(index === 4) {
+                content.innerHTML = getReporteExtrasTab();
+            }
+        }
+
+        function getAreasTab() {
+            return `
+                <div class="tab-content active">
+                    <h3>Gestión de Áreas</h3>
+                    <div class="form-group">
+                        <label>Nueva Área</label>
+                        <input type="text" id="nuevaArea" placeholder="Ej: Cocina Fría">
+                    </div>
+                    <button class="btn btn-success" onclick="crearArea()">Crear Área</button>
+                    <div class="areas-list" id="areasList"></div>
+                </div>
+            `;
+        }
+
+        function getProductosTab() {
+            const hoy = new Date().toISOString().split('T')[0];
+            return `
+                <div class="tab-content active">
+                    <h3>Registrar Productos (Normal)</h3>
+                    
+                    <div class="form-group">
+                        <label>Fecha del Registro</label>
+                        <input type="date" id="fechaRegistro" value="${hoy}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Tipo de Servicio</label>
+                        <select id="servicioSelect" required onchange="limpiarLista()">
+                            <option value="">-- Seleccione --</option>
+                            <option value="Desayuno">Desayuno</option>
+                            <option value="Almuerzo">Almuerzo</option>
+                            <option value="Merienda">Merienda</option>
+                            <option value="Cena">Cena</option>
+                            <option value="Caja Lonch">Caja Lonch</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Área</label>
+                        <select id="areaSelect" required onchange="limpiarLista()">
+                            <option value="">-- Seleccione --</option>
+                        </select>
+                    </div>
+                    
+                    <hr class="separator">
+                    
+                    <h3>Agregar Productos</h3>
+                    
+                    <div class="form-group">
+                        <label>Buscar Producto</label>
+                        <input type="text" id="buscarProducto" placeholder="Código o descripción" autocomplete="off">
+                        <div id="searchResults" class="search-results"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Producto Seleccionado</label>
+                        <input type="text" id="productoSeleccionado" readonly placeholder="Seleccione un producto">
+                        <input type="hidden" id="codigoProducto">
+                        <input type="hidden" id="unidadProducto">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Cantidad</label>
+                        <input type="number" id="cantidadProducto" step="0.01" placeholder="Ej: 10.5">
+                    </div>
+                    
+                    <button type="button" class="btn btn-success" onclick="agregarProducto()">+ Agregar a la Lista</button>
+                    
+                    <div id="listaProductos" style="display: none;">
+                        <hr class="separator">
+                        <h3>Productos Agregados</h3>
+                        <div id="productosAgregados" class="productos-agregados-container"></div>
+                        <button type="button" class="btn btn-primary" onclick="guardarTodos()">💾 Guardar Todos</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getExtrasTab() {
+            const hoy = new Date().toISOString().split('T')[0];
+            return `
+                <div class="tab-content active">
+                    <h3>Registrar EXTRAS (con Facturación)</h3>
+                    
+                    <div class="form-group">
+                        <label>Fecha del Registro</label>
+                        <input type="date" id="fechaRegistroExtras" value="${hoy}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Tipo de Servicio</label>
+                        <select id="servicioSelectExtras" required onchange="limpiarListaExtras()">
+                            <option value="">-- Seleccione --</option>
+                            <option value="Desayuno">Desayuno</option>
+                            <option value="Almuerzo">Almuerzo</option>
+                            <option value="Merienda">Merienda</option>
+                            <option value="Cena">Cena</option>
+                            <option value="Caja Lonch">Caja Lonch</option>
+                        </select>
+                    </div>
+                    
+                    <hr class="separator">
+                    
+                    <h3>Agregar Productos</h3>
+                    
+                    <div class="form-group">
+                        <label>Buscar Producto</label>
+                        <input type="text" id="buscarProductoExtras" placeholder="Código o descripción" autocomplete="off">
+                        <div id="searchResultsExtras" class="search-results"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Producto Seleccionado</label>
+                        <input type="text" id="productoSeleccionadoExtras" readonly placeholder="Seleccione un producto">
+                        <input type="hidden" id="codigoProductoExtras">
+                        <input type="hidden" id="unidadProductoExtras">
+                        <input type="hidden" id="precioProductoExtras">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Cantidad</label>
+                        <input type="number" id="cantidadProductoExtras" step="0.01" placeholder="Ej: 10.5">
+                    </div>
+                    
+                    <button type="button" class="btn btn-success" onclick="agregarProductoExtras()">+ Agregar a la Lista</button>
+                    
+                    <div id="listaProductosExtras" style="display: none;">
+                        <hr class="separator">
+                        <h3>Productos EXTRAS Agregados</h3>
+                        <div id="productosAgregadosExtras" class="productos-agregados-container"></div>
+                        <button type="button" class="btn btn-primary" onclick="abrirFormularioExtras()">💰 Continuar a Facturación</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getReporteDiarioTab() {
+            const hoy = new Date().toISOString().split('T')[0];
+            return `
+                <div class="tab-content active">
+                    <h3>Reporte Diario de Movimientos</h3>
+                    
+                    <div class="form-group">
+                        <label>Seleccionar Fecha</label>
+                        <input type="date" id="fechaReporte" value="${hoy}">
+                    </div>
+                    <button class="btn btn-primary" onclick="cargarReporteDiario()">Cargar Reporte</button>
+                    
+                    <div id="reportContainer"></div>
+                </div>
+            `;
+        }
+
+        function getReporteExtrasTab() {
+            const hoy = new Date().toISOString().split('T')[0];
+            const hace30 = new Date();
+            hace30.setDate(hace30.getDate() - 30);
+            const hace30str = hace30.toISOString().split('T')[0];
+            
+            return `
+                <div class="tab-content active">
+                    <h3>Reporte de EXTRAS Facturables</h3>
+                    
+                    <div class="form-group">
+                        <label>Fecha Inicio</label>
+                        <input type="date" id="fechaInicioExtras" value="${hace30str}">
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha Fin</label>
+                        <input type="date" id="fechaFinExtras" value="${hoy}">
+                    </div>
+                    <button class="btn btn-primary" onclick="cargarReporteExtras()">Cargar Reporte</button>
+                    
+                    <div id="reportExtrasContainer"></div>
+                </div>
+            `;
+        }
+
+        // ============================================
+        // ÁREAS
+        // ============================================
+
+        async function cargarAreas() {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: new URLSearchParams({ action: 'getAreas' })
+                });
+                const data = await response.json();
+                if(data.success) {
+                    areasData = data.areas;
+                    mostrarAreas();
+                }
+            } catch(error) {
+                console.error(error);
+            }
+        }
+
+        function mostrarAreas() {
+            const container = document.getElementById('areasList');
+            if(!areasData.length) {
+                container.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 20px; font-size: 13px;">No hay áreas registradas</p>';
+                return;
+            }
+            container.innerHTML = areasData.map(a => `
+                <div class="area-card">
+                    <h4>${a.nombre}</h4>
+                    <small style="color: #6c757d;">ID: ${a.id}</small>
+                </div>
+            `).join('');
+        }
+
+        async function crearArea() {
+            const nombre = document.getElementById('nuevaArea').value.trim();
+            if(!nombre) {
+                showAlert('dashboardAlert', 'Ingrese un nombre para el área', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: new URLSearchParams({ action: 'createArea', nombre })
+                });
+                const data = await response.json();
+                
+                if(data.success) {
+                    showAlert('dashboardAlert', data.message, 'success');
+                    document.getElementById('nuevaArea').value = '';
+                    cargarAreas();
+                } else {
+                    showAlert('dashboardAlert', data.message, 'error');
+                }
+            } catch(error) {
+                showAlert('dashboardAlert', 'Error al crear área', 'error');
+            }
+        }
+
+        function cargarAreasSelect() {
+            const select = document.getElementById('areaSelect');
+            select.innerHTML = '<option value="">-- Seleccione --</option>';
+            areasData.forEach(a => {
+                select.innerHTML += `<option value="${a.nombre}">${a.nombre}</option>`;
+            });
+        }
+
+        function cargarAreasSelectExtras() {
+            // EXTRAS no usa áreas, se maneja diferente
+        }
+
+        // ============================================
+        // BÚSQUEDA PRODUCTOS NORMALES
+        // ============================================
+
+        let searchTimeout;
+        function setupSearch() {
+            const input = document.getElementById('buscarProducto');
+            input.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                const busqueda = this.value.trim();
+                
+                if(busqueda.length < 2) {
+                    document.getElementById('searchResults').classList.remove('active');
+                    return;
+                }
+                
+                searchTimeout = setTimeout(() => buscarProductos(busqueda), 300);
+            });
+        }
+
+        async function buscarProductos(busqueda) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: new URLSearchParams({ action: 'searchProducts', busqueda })
+                });
+                const data = await response.json();
+                
+                if(data.success) {
+                    mostrarResultados(data.productos);
+                }
+            } catch(error) {
+                console.error(error);
+            }
+        }
+
+        function mostrarResultados(productos) {
+            const results = document.getElementById('searchResults');
+            
+            if(!productos.length) {
+                results.innerHTML = '<div class="product-item">No se encontraron productos</div>';
+                results.classList.add('active');
+                return;
+            }
+            
+            results.innerHTML = productos.map(p => `
+                <div class="product-item" onclick='seleccionarProducto(${JSON.stringify(p)})'>
+                    <strong style="color: #2a5298;">${p.codigo}</strong> - ${p.descripcion}
+                    <br><small style="color: #6c757d;">Unidad: ${p.unidad}</small>
+                </div>
+            `).join('');
+            
+            results.classList.add('active');
+        }
+
+        function seleccionarProducto(producto) {
+            document.getElementById('codigoProducto').value = producto.codigo;
+            document.getElementById('productoSeleccionado').value = producto.codigo + ' - ' + producto.descripcion;
+            document.getElementById('unidadProducto').value = producto.unidad;
+            document.getElementById('buscarProducto').value = '';
+            document.getElementById('searchResults').classList.remove('active');
+        }
+
+        // ============================================
+        // LISTA PRODUCTOS NORMALES
+        // ============================================
+
+        function limpiarLista() {
+            productosLista = [];
+            document.getElementById('listaProductos').style.display = 'none';
+            document.getElementById('productosAgregados').innerHTML = '';
+        }
+
+        function agregarProducto() {
+            const servicio = document.getElementById('servicioSelect').value;
+            const area = document.getElementById('areaSelect').value;
+            const codigo = document.getElementById('codigoProducto').value;
+            const producto = document.getElementById('productoSeleccionado').value;
+            const unidad = document.getElementById('unidadProducto').value;
+            const cantidad = document.getElementById('cantidadProducto').value;
+            
+            if(!servicio || !area) {
+                showAlert('dashboardAlert', 'Seleccione Servicio y Área', 'error');
+                return;
+            }
+            
+            if(!codigo) {
+                showAlert('dashboardAlert', 'Seleccione un producto', 'error');
+                return;
+            }
+            
+            if(!cantidad || cantidad <= 0) {
+                showAlert('dashboardAlert', 'Ingrese una cantidad válida', 'error');
+                return;
+            }
+            
+            productosLista.push({
+                servicio, area, codigo, producto, unidad, cantidad: parseFloat(cantidad)
+            });
+            
+            document.getElementById('codigoProducto').value = '';
+            document.getElementById('productoSeleccionado').value = '';
+            document.getElementById('unidadProducto').value = '';
+            document.getElementById('cantidadProducto').value = '';
+            document.getElementById('buscarProducto').value = '';
+            
+            mostrarListaProductos();
+            showAlert('dashboardAlert', '✓ Producto agregado', 'success');
+        }
+
+        function mostrarListaProductos() {
+            const container = document.getElementById('productosAgregados');
+            const listaDiv = document.getElementById('listaProductos');
+            
+            if(productosLista.length === 0) {
+                listaDiv.style.display = 'none';
+                return;
+            }
+            
+            listaDiv.style.display = 'block';
+            
+            container.innerHTML = productosLista.map((p, index) => `
+                <div class="producto-agregado-item">
+                    <div>
+                        <strong>${p.codigo}</strong> - ${p.producto}
+                        <br><small style="color: #6c757d;">${p.cantidad} ${p.unidad}</small>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-small" onclick="quitarProducto(${index})">Quitar</button>
+                </div>
+            `).join('');
+        }
+
+        function quitarProducto(index) {
+            productosLista.splice(index, 1);
+            mostrarListaProductos();
+            showAlert('dashboardAlert', 'Producto quitado', 'success');
+        }
+
+        async function guardarTodos() {
+            if(productosLista.length === 0) {
+                showAlert('dashboardAlert', 'No hay productos para guardar', 'error');
+                return;
+            }
+            
+            const fechaRegistro = document.getElementById('fechaRegistro').value;
+            const btnGuardar = event.target;
+            btnGuardar.disabled = true;
+            btnGuardar.textContent = 'Guardando...';
+            
+            let exitosos = 0;
+            
+            for(const p of productosLista) {
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        body: new URLSearchParams({
+                            action: 'saveMovement',
+                            fecha: fechaRegistro,
+                            servicio: p.servicio,
+                            area: p.area,
+                            codigoProducto: p.codigo,
+                            producto: p.producto,
+                            unidad: p.unidad,
+                            cantidad: p.cantidad,
+                            usuario: currentUser.usuario
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if(data.success) exitosos++;
+                } catch(error) {
+                    console.error(error);
+                }
+            }
+            
+            btnGuardar.disabled = false;
+            btnGuardar.textContent = '💾 Guardar Todos';
+            
+            showAlert('dashboardAlert', `✓ ${exitosos} productos guardados`, 'success');
+            limpiarLista();
+        }
+
+        // ============================================
+        // BÚSQUEDA PRODUCTOS EXTRAS
+        // ============================================
+
+        function setupSearchExtras() {
+            const input = document.getElementById('buscarProductoExtras');
+            input.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                const busqueda = this.value.trim();
+                
+                if(busqueda.length < 2) {
+                    document.getElementById('searchResultsExtras').classList.remove('active');
+                    return;
+                }
+                
+                searchTimeout = setTimeout(() => buscarProductosExtras(busqueda), 300);
+            });
+        }
+
+        async function buscarProductosExtras(busqueda) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: new URLSearchParams({ action: 'searchProducts', busqueda })
+                });
+                const data = await response.json();
+                
+                if(data.success) {
+                    mostrarResultadosExtras(data.productos);
+                }
+            } catch(error) {
+                console.error(error);
+            }
+        }
+
+        function mostrarResultadosExtras(productos) {
+            const results = document.getElementById('searchResultsExtras');
+            
+            if(!productos.length) {
+                results.innerHTML = '<div class="product-item">No se encontraron productos</div>';
+                results.classList.add('active');
+                return;
+            }
+            
+            results.innerHTML = productos.map(p => `
+                <div class="product-item" onclick='seleccionarProductoExtras(${JSON.stringify(p)})'>
+                    <strong style="color: #2a5298;">${p.codigo}</strong> - ${p.descripcion}
+                    <br><small style="color: #6c757d;">Unidad: ${p.unidad} | Precio: $${p.precio}</small>
+                </div>
+            `).join('');
+            
+            results.classList.add('active');
+        }
+
+        function seleccionarProductoExtras(producto) {
+            document.getElementById('codigoProductoExtras').value = producto.codigo;
+            document.getElementById('productoSeleccionadoExtras').value = producto.codigo + ' - ' + producto.descripcion;
+            document.getElementById('unidadProductoExtras').value = producto.unidad;
+            document.getElementById('precioProductoExtras').value = producto.precio;
+            document.getElementById('buscarProductoExtras').value = '';
+            document.getElementById('searchResultsExtras').classList.remove('active');
+        }
+
+        // ============================================
+        // LISTA PRODUCTOS EXTRAS
+        // ============================================
+
+        function limpiarListaExtras() {
+            extrasProductos = [];
+            document.getElementById('listaProductosExtras').style.display = 'none';
+            document.getElementById('productosAgregadosExtras').innerHTML = '';
+        }
+
+        function agregarProductoExtras() {
+            const servicio = document.getElementById('servicioSelectExtras').value;
+            const codigo = document.getElementById('codigoProductoExtras').value;
+            const producto = document.getElementById('productoSeleccionadoExtras').value;
+            const unidad = document.getElementById('unidadProductoExtras').value;
+            const precio = parseFloat(document.getElementById('precioProductoExtras').value);
+            const cantidad = document.getElementById('cantidadProductoExtras').value;
+            
+            if(!servicio) {
+                showAlert('dashboardAlert', 'Seleccione Servicio', 'error');
+                return;
+            }
+            
+            if(!codigo) {
+                showAlert('dashboardAlert', 'Seleccione un producto', 'error');
+                return;
+            }
+            
+            if(!cantidad || cantidad <= 0) {
+                showAlert('dashboardAlert', 'Ingrese una cantidad válida', 'error');
+                return;
+            }
+            
+            extrasProductos.push({
+                codigo, descripcion: producto, unidad, precio, cantidad: parseFloat(cantidad)
+            });
+            
+            document.getElementById('codigoProductoExtras').value = '';
+            document.getElementById('productoSeleccionadoExtras').value = '';
+            document.getElementById('unidadProductoExtras').value = '';
+            document.getElementById('precioProductoExtras').value = '';
+            document.getElementById('cantidadProductoExtras').value = '';
+            document.getElementById('buscarProductoExtras').value = '';
+            
+            mostrarListaProductosExtras();
+            showAlert('dashboardAlert', '✓ Producto agregado', 'success');
+        }
+
+        function mostrarListaProductosExtras() {
+            const container = document.getElementById('productosAgregadosExtras');
+            const listaDiv = document.getElementById('listaProductosExtras');
+            
+            if(extrasProductos.length === 0) {
+                listaDiv.style.display = 'none';
+                return;
+            }
+            
+            listaDiv.style.display = 'block';
+            
+            const total = extrasProductos.reduce((sum, p) => sum + (p.precio * p.cantidad), 0);
+            
+            container.innerHTML = extrasProductos.map((p, index) => `
+                <div class="producto-agregado-item">
+                    <div>
+                        <strong>${p.codigo}</strong> - ${p.descripcion}
+                        <br><small style="color: #6c757d;">${p.cantidad} ${p.unidad} x $${p.precio.toFixed(2)} = $${(p.precio * p.cantidad).toFixed(2)}</small>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-small" onclick="quitarProductoExtras(${index})">Quitar</button>
+                </div>
+            `).join('');
+            
+            container.innerHTML += `
+                <div style="text-align: right; padding: 10px; font-weight: bold; color: #1e3c72;">
+                    TOTAL: $${total.toFixed(2)}
+                </div>
+            `;
+        }
+
+        function quitarProductoExtras(index) {
+            extrasProductos.splice(index, 1);
+            mostrarListaProductosExtras();
+            showAlert('dashboardAlert', 'Producto quitado', 'success');
+        }
+
+        // ============================================
+        // FORMULARIO EXTRAS
+        // ============================================
+
+        function abrirFormularioExtras() {
+            if(extrasProductos.length === 0) {
+                showAlert('dashboardAlert', 'No hay productos para procesar', 'error');
+                return;
+            }
+
+            const costo = extrasProductos.reduce((sum, p) => sum + (p.precio * p.cantidad), 0);
+            const utilidad = costo * 0.35;
+            const total = costo + utilidad;
+
+            const modalContent = document.getElementById('extrasModalContent');
+            modalContent.innerHTML = `
+                <div class="resumen-box">
+                    <h4>Resumen de Productos</h4>
+                    ${extrasProductos.map(p => `
+                        <div class="resumen-item">
+                            <span>${p.descripcion}</span>
+                            <span>${p.cantidad} x $${p.precio.toFixed(2)}</span>
+                        </div>
+                    `).join('')}
+                    <div class="resumen-total">
+                        <div class="resumen-item"><span>Costo Total:</span><span>$${costo.toFixed(2)}</span></div>
+                        <div class="resumen-item"><span>Utilidad 35%:</span><span>$${utilidad.toFixed(2)}</span></div>
+                        <div class="resumen-item"><span>TOTAL A COBRAR:</span><span>$${total.toFixed(2)}</span></div>
+                    </div>
+                </div>
+
+                <div class="radio-group">
+                    <h4 style="margin-bottom: 15px;">¿Cómo se cobrará este producto?</h4>
+                    <div class="radio-option" onclick="selectTipoCobro('bebidas')">
+                        <input type="radio" name="tipoCobro" value="bebidas" id="radioBebidas">
+                        <label for="radioBebidas" style="font-size: 14px; font-weight: 600;">Bebidas y Cafetería</label>
+                    </div>
+                    <div class="radio-option" onclick="selectTipoCobro('alimentacion')">
+                        <input type="radio" name="tipoCobro" value="alimentacion" id="radioAlimentacion">
+                        <label for="radioAlimentacion" style="font-size: 14px; font-weight: 600;">Alimentación</label>
+                    </div>
+                </div>
+
+                <div id="detalleCobroContainer"></div>
+
+                <div style="margin-top: 20px;">
+                    <button class="btn btn-secondary" onclick="closeExtrasModal()">Cancelar</button>
+                    <button class="btn btn-success" onclick="guardarExtra()" id="btnGuardarExtra" disabled>Guardar Extra</button>
+                </div>
+            `;
+
+            document.getElementById('extrasModal').classList.add('active');
+        }
+
+        let tipoCobroSeleccionado = null;
+        let detalleCobroData = {};
+
+        function selectTipoCobro(tipo) {
+            tipoCobroSeleccionado = tipo;
+            
+            document.querySelectorAll('.radio-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            document.getElementById(tipo === 'bebidas' ? 'radioBebidas' : 'radioAlimentacion').checked = true;
+
+            if(tipo === 'bebidas') {
+                mostrarFormularioBebidas();
+            } else {
+                mostrarFormularioAlimentacion();
+            }
+
+            document.getElementById('btnGuardarExtra').disabled = false;
+        }
+
+        function mostrarFormularioBebidas() {
+            const container = document.getElementById('detalleCobroContainer');
+            container.innerHTML = `
+                <h4 style="margin: 20px 0 15px;">Seleccione productos a facturar:</h4>
+                <div class="checkbox-list" id="bebidasList">
+                    ${BEBIDAS_CAFETERIA.map((b, i) => `
+                        <div class="checkbox-item">
+                            <label>
+                                <input type="checkbox" id="beb_${i}" onchange="toggleBebida(${i})">
+                                ${b.nombre}
+                            </label>
+                            <span style="font-size: 12px; color: #666;">$${b.precio.toFixed(2)}</span>
+                            <input type="number" id="cant_${i}" min="0" step="1" placeholder="0" disabled>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>Número de Ticket</label>
+                    <input type="text" id="numeroTicket" placeholder="Ej: 12345">
+                </div>
+            `;
+
+            detalleCobroData = { tipo: 'bebidas', productos: [] };
+        }
+
+        function toggleBebida(index) {
+            const checked = document.getElementById(`beb_${index}`).checked;
+            document.getElementById(`cant_${index}`).disabled = !checked;
+            if(!checked) document.getElementById(`cant_${index}`).value = '';
+        }
+
+        function mostrarFormularioAlimentacion() {
+            const container = document.getElementById('detalleCobroContainer');
+            container.innerHTML = `
+                <h4 style="margin: 20px 0 15px;">Personas beneficiadas:</h4>
+                <div id="personasList"></div>
+                <button class="btn-add" onclick="agregarPersona()">+ Agregar Persona</button>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>Fecha de Cobro (cuándo se verá reflejado)</label>
+                    <input type="date" id="fechaCobro">
+                </div>
+            `;
+
+            detalleCobroData = { tipo: 'alimentacion', personas: [] };
+            agregarPersona();
+        }
+
+        function agregarPersona() {
+            const container = document.getElementById('personasList');
+            const index = detalleCobroData.personas.length;
+            
+            const personaHtml = `
+                <div class="persona-item" id="persona_${index}">
+                    <h4>Persona ${index + 1} <button class="btn-remove" onclick="quitarPersona(${index})">Quitar</button></h4>
+                    <div class="form-group">
+                        <label>Nombre completo</label>
+                        <input type="text" id="nombre_${index}" placeholder="Ej: Juan Pérez">
+                    </div>
+                    <div class="form-group">
+                        <label>Empresa</label>
+                        <input type="text" id="empresa_${index}" placeholder="Ej: Petroecuador">
+                    </div>
+                    <div class="form-group">
+                        <label>Servicio</label>
+                        <select id="servicio_${index}">
+                            ${SERVICIOS_ALIMENTACION.map(s => `<option value="${s}">${s}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', personaHtml);
+            detalleCobroData.personas.push({});
+        }
+
+        function quitarPersona(index) {
+            document.getElementById(`persona_${index}`).remove();
+        }
+
+        async function guardarExtra() {
+            const fecha = document.getElementById('fechaRegistroExtras').value;
+            const servicio = document.getElementById('servicioSelectExtras').value;
+
+            let detalleCobro = {};
+
+            if(tipoCobroSeleccionado === 'bebidas') {
+                const productos = [];
+                BEBIDAS_CAFETERIA.forEach((b, i) => {
+                    const checked = document.getElementById(`beb_${i}`).checked;
+                    const cantidad = parseInt(document.getElementById(`cant_${i}`).value) || 0;
+                    if(checked && cantidad > 0) {
+                        productos.push({ nombre: b.nombre, cantidad, precio: b.precio });
+                    }
+                });
+
+                const ticket = document.getElementById('numeroTicket').value.trim();
+                if(!ticket) {
+                    alert('Ingrese el número de ticket');
+                    return;
+                }
+
+                detalleCobro = { productos, ticket };
+            } else {
+                const personas = [];
+                detalleCobroData.personas.forEach((p, i) => {
+                    const nombre = document.getElementById(`nombre_${i}`)?.value.trim();
+                    const empresa = document.getElementById(`empresa_${i}`)?.value.trim();
+                    const servicioP = document.getElementById(`servicio_${i}`)?.value;
+                    
+                    if(nombre && empresa && servicioP) {
+                        personas.push({ nombre, empresa, servicio: servicioP });
+                    }
+                });
+
+                const fechaCobro = document.getElementById('fechaCobro').value;
+                if(!fechaCobro) {
+                    alert('Seleccione la fecha de cobro');
+                    return;
+                }
+
+                if(personas.length === 0) {
+                    alert('Agregue al menos una persona');
+                    return;
+                }
+
+                detalleCobro = { personas, fechaCobro };
+            }
+
+            const costo = extrasProductos.reduce((sum, p) => sum + (p.precio * p.cantidad), 0);
+            const utilidad = costo * 0.35;
+            const total = costo + utilidad;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: new URLSearchParams({
+                        action: 'saveExtra',
+                        fecha,
+                        servicio,
+                        usuario: currentUser.usuario,
+                        productos: JSON.stringify(extrasProductos),
+                        costoTotal: costo.toFixed(2),
+                        utilidad35: utilidad.toFixed(2),
+                        totalCobrar: total.toFixed(2),
+                        tipoCobro: tipoCobroSeleccionado,
+                        detalleCobro: JSON.stringify(detalleCobro),
+                        numeroTicket: tipoCobroSeleccionado === 'bebidas' ? detalleCobro.ticket : ''
+                    })
+                });
+
+                const data = await response.json();
+
+                if(data.success) {
+                    showAlert('dashboardAlert', '✓ Extra guardado exitosamente', 'success');
+                    closeExtrasModal();
+                    limpiarListaExtras();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch(error) {
+                alert('Error de conexión: ' + error.message);
+            }
+        }
+
+        function closeExtrasModal() {
+            document.getElementById('extrasModal').classList.remove('active');
+            tipoCobroSeleccionado = null;
+            detalleCobroData = {};
+        }
+
+        // ============================================
+        // REPORTES
+        // ============================================
+
+        async function cargarReporteDiario() {
+            const fecha = document.getElementById('fechaReporte').value;
+            
+            if(!fecha) {
+                showAlert('dashboardAlert', 'Seleccione una fecha', 'error');
+                return;
+            }
+
+            const container = document.getElementById('reportContainer');
+            container.innerHTML = '<div style="text-align: center; padding: 30px;"><div class="spinner" style="border: 3px solid #f3f3f3; border-top: 3px solid #2a5298; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto;"></div><p style="margin-top: 15px;">Cargando reporte...</p></div>';
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: new URLSearchParams({ action: 'getDailyReport', fecha })
+                });
+                const data = await response.json();
+                
+                if(data.success) {
+                    mostrarReporteDiario(data);
+                } else {
+                    container.innerHTML = '<div class="empty-report">Error al cargar el reporte</div>';
+                }
+            } catch(error) {
+                container.innerHTML = '<div class="empty-report">Error de conexión</div>';
+            }
+        }
+
+        function mostrarReporteDiario(data) {
+            const container = document.getElementById('reportContainer');
+            
+            if(!data.servicios || data.servicios.length === 0) {
+                container.innerHTML = '<div class="empty-report">No hay datos para esta fecha</div>';
+                return;
+            }
+            
+            let html = '<div style="margin-top: 20px;"><button class="btn btn-success btn-small" onclick="descargarCSV()">📥 Descargar CSV</button> <button class="btn btn-secondary btn-small" onclick="window.print()">🖨️ Imprimir</button></div><br>';
+            
+            const servicios = ['Desayuno', 'Almuerzo', 'Merienda', 'Cena', 'Caja Lonch'];
+            
+            servicios.forEach(servicio => {
+                const productos = data.reporte[servicio] || [];
+                
+                if(productos.length === 0) return;
+                
+                html += `
+                    <div style="margin-bottom: 30px;">
+                        <div style="background: #2a5298; color: white; padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 8px; font-size: 14px; font-weight: 600;">${servicio.toUpperCase()}</div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Producto</th>
+                                    <th>Unidad</th>
+                                    ${data.areas.map(a => `<th>${a}</th>`).join('')}
+                                    <th class="total-col">TOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                productos.forEach(p => {
+                    html += `
+                        <tr>
+                            <td>${p.codigo}</td>
+                            <td>${p.producto}</td>
+                            <td>${p.unidad}</td>
+                            ${data.areas.map(a => `<td style="text-align: center;">${(p.areas[a] || 0).toFixed(2)}</td>`).join('')}
+                            <td class="total-col" style="text-align: center;">${p.total.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function descargarCSV() {
+            // Implementar descarga CSV basado en los datos del reporte
+            alert('Función de descarga CSV - Por implementar');
+        }
+
+        async function cargarReporteExtras() {
+            const fechaInicio = document.getElementById('fechaInicioExtras').value;
+            const fechaFin = document.getElementById('fechaFinExtras').value;
+            
+            if(!fechaInicio || !fechaFin) {
+                showAlert('dashboardAlert', 'Seleccione ambas fechas', 'error');
+                return;
+            }
+
+            const container = document.getElementById('reportExtrasContainer');
+            container.innerHTML = '<div style="text-align: center; padding: 30px;">Cargando...</div>';
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: new URLSearchParams({ action: 'getExtrasReport', fechaInicio, fechaFin })
+                });
+                const data = await response.json();
+                
+                if(data.success) {
+                    mostrarReporteExtras(data);
+                } else {
+                    container.innerHTML = '<div class="empty-report">Error al cargar reporte</div>';
+                }
+            } catch(error) {
+                container.innerHTML = '<div class="empty-report">Error de conexión</div>';
+            }
+        }
+
+        function mostrarReporteExtras(data) {
+            const container = document.getElementById('reportExtrasContainer');
+            
+            if(!data.extras || data.extras.length === 0) {
+                container.innerHTML = '<div class="empty-report">No hay extras en este período</div>';
+                return;
+            }
+            
+            let html = `
+                <div style="margin: 20px 0;">
+                    <h3>REPORTE DE EXTRAS FACTURABLES</h3>
+                    <p><strong>Total General: $${data.totalGeneral.toFixed(2)}</strong></p>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Servicio</th>
+                            <th>Productos</th>
+                            <th>Costo</th>
+                            <th>Utilidad</th>
+                            <th>Total</th>
+                            <th>Tipo Cobro</th>
+                            <th>Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            data.extras.forEach(e => {
+                const productosStr = e.productos.map(p => `${p.descripcion} (${p.cantidad})`).join(', ');
+                let detalleStr = '';
+                
+                if(e.tipoCobro === 'bebidas') {
+                    detalleStr = `Ticket: ${e.numeroTicket}`;
+                } else {
+                    detalleStr = e.detalleCobro.personas ? e.detalleCobro.personas.map(p => p.nombre).join(', ') : '';
+                }
+                
+                html += `
+                    <tr>
+                        <td>${e.fecha}</td>
+                        <td>${e.servicio}</td>
+                        <td style="font-size: 11px;">${productosStr}</td>
+                        <td>$${e.costoTotal.toFixed(2)}</td>
+                        <td>$${e.utilidad35.toFixed(2)}</td>
+                        <td><strong>$${e.totalCobrar.toFixed(2)}</strong></td>
+                        <td>${e.tipoCobro === 'bebidas' ? 'Bebidas' : 'Alimentación'}</td>
+                        <td style="font-size: 11px;">${detalleStr}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        // ============================================
+        // UTILITIES
+        // ============================================
+
+        function showAlert(elementId, message, type) {
+            const alert = document.getElementById(elementId);
+            alert.textContent = message;
+            alert.className = `alert alert-${type} active`;
+            setTimeout(() => alert.classList.remove('active'), 4000);
+        }
+    </script>
+</body>
+</html>
